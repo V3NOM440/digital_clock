@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock with Date and Weather Feature</title>
+    <style>
+        /* Center the clock and selection on the page */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Clock container styling */
+        .clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 70%;
+            background-color: black;
+            padding: 40px;
+            border-radius: 50px;
+            box-shadow: 0 0 70px rgba(255, 149, 0, 0.5);
+        }
+
+        /* Digital clock styling */
+        .clock {
+            font-size: 3em;
+            padding: 20px;
+            color: rgba(255, 149, 0, 0.5);
+            border-radius: 50px;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        /* Date styling */
+        .date {
+            font-size: 2em;
+            color: rgba(255, 149, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        /* Weather styling */
+        .weather {
+            font-size: 2em;
+            color: rgba(255, 149, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        /* Dropdown styling */
+        .timezone-selector,
+        .location-selector,
+        .color-selector {
+            font-size: 1.5em;
+            padding: 15px;
+            margin: 10px;
+            background-color: black;
+            color: rgba(255, 149, 0, 0.5);
+            border: none;
+            border-radius: 10px;
+            outline: none;
+            cursor: pointer;
+            transition: color 0.3s, background-color 0.3s, border-color 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="clock-container">
+        <!-- Digital Clock Display -->
+        <div class="clock" id="clock">12:00:00 AM</div>
+        
+        <!-- Date Display -->
+        <div class="date" id="date">October 31, 2024</div>
+        
+        <!-- Weather Display -->
+        <div class="weather" id="weather">Loading weather...</div>
+
+        <!-- Timezone selector -->
+        <select id="timezone" class="timezone-selector">
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">New York (GMT-5)</option>
+            <option value="Europe/London">London (GMT+0)</option>
+            <option value="Europe/Paris">Paris (GMT+1)</option>
+            <option value="Asia/Kolkata" selected>India (GMT+5:30)</option>
+            <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
+            <option value="Australia/Sydney">Sydney (GMT+10)</option>
+        </select>
+
+        <!-- Weather Location selector -->
+        <select id="location" class="location-selector">
+            <option value="New York">New York</option>
+            <option value="London">London</option>
+            <option value="Paris">Paris</option>
+            <option value="Kolkata" selected>India</option>
+            <option value="Tokyo">Tokyo</option>
+            <option value="Sydney">Sydney</option>
+        </select>
+
+        <!-- Color selector -->
+        <input type="color" id="colorPicker" class="color-selector" value="#FF9500" title="Choose color" />
+
+        <input type="color" id="boxShadowColorPicker" class="color-selector" value="#FF9500" title="Choose box shadow color" />
+
+    </div>
+
+    <script>
+        const apiKey = '689eb4b1eef07ccd02619dc8c0b430eb'; // OpenWeatherMap API key
+
+        // Function to update the digital clock every second
+        function updateDigitalClock() {
+            const timezone = document.getElementById('timezone').value;
+            const now = new Date().toLocaleString("en-US", { timeZone: timezone });
+            const date = new Date(now);
+
+            // Format time
+            let hours = date.getHours();
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+
+            // Convert to 12-hour format
+            hours = hours % 12 || 12;
+            hours = String(hours).padStart(2, '0');
+
+            // Display time in HH:MM:SS AM/PM format
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+            // Display current date
+            document.getElementById('date').textContent = date.toLocaleDateString();
+        }
+
+        // Function to fetch weather information based on the selected location
+        async function fetchWeather() {
+            const location = document.getElementById('location').value;
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&units=metric`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                const weatherDescription = data.weather[0].description;
+                const temperature = data.main.temp;
+
+                // Display weather info
+                document.getElementById('weather').textContent = `${location}: ${temperature}°C, ${weatherDescription}`;
+            } else {
+                document.getElementById('weather').textContent = 'Weather data not available';
+            }
+        }
+
+        // Function to change clock colors based on color picker
+        function updateClockColor() {
+            const color = document.getElementById('colorPicker').value;
+            const digitalClock = document.getElementById('clock');
+            const dateDisplay = document.getElementById('date');
+            const weatherDisplay = document.getElementById('weather');
+            const timezoneSelector = document.getElementById('timezone');
+            const locationSelector = document.getElementById('location');
+            const colorPicker = document.getElementById('colorPicker');
+
+            // Update clock, date, and weather colors
+            digitalClock.style.color = color;
+            dateDisplay.style.color = color;
+            weatherDisplay.style.color = color;
+            digitalClock.style.boxShadow = `0 0 30px ${color}`;
+
+            // Update selector colors
+            timezoneSelector.style.color = color;
+            timezoneSelector.style.borderColor = color;
+            locationSelector.style.color = color;
+            locationSelector.style.borderColor = color;
+            colorPicker.style.borderColor = color;
+
+            function updateBoxShadowColor() {
+            const boxShadowColor = document.getElementById('boxShadowColorPicker').value;
+            const clockContainer = document.querySelector('.clock-container');
+
+            // Set box shadow color based on selected color
+            clockContainer.style.boxShadow = `0 0 30px ${boxShadowColor}`;
+        }
+
+            // Add event listener to change box shadow color when the user selects a new color
+            document.getElementById('boxShadowColorPicker').addEventListener('input', updateBoxShadowColor);
+
+
+        
+
+            // Apply color to each option in selectors
+            for (const option of timezoneSelector.options) option.style.color = color;
+            for (const option of locationSelector.options) option.style.color = color;
+        }
+
+        // Initialize clock, weather, and color on page load
+        updateDigitalClock();
+        fetchWeather();
+        updateClockColor();
+
+        // Set intervals to update the clock every second
+        setInterval(updateDigitalClock, 1000);
+
+        // Update weather when user selects a different location
+        document.getElementById('location').addEventListener('change', fetchWeather);
+
+        // Update timezone and weather when timezone changes
+        document.getElementById('timezone').addEventListener('change', () => {
+            updateDigitalClock();
+            fetchWeather();
+        });
+
+        // Update color when user selects a new color
+        document.getElementById('colorPicker').addEventListener('input', updateClockColor);
+    </script>
+</body>
+</html>
